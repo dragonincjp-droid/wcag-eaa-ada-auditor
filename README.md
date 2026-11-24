@@ -260,7 +260,7 @@ Use Clay's **HTTP API** column to enrich any prospect list with `legalRiskScore`
 - Full setup guide + **3 proven Cold Email Templates** (Overlay Replacement, EU EAA Statement Gap, US ADA Checkout Risk): see [`integrations/clay-enrichment-recipe.md`](./integrations/clay-enrichment-recipe.md).
 - **Endpoint (`POST`)**:
   ```text
-  https://api.apify.com/v2/acts/<YOUR_USERNAME>~wcag-eaa-ada-auditor/run-sync-get-dataset-items
+  https://api.apify.com/v2/acts/<healthy_addax>~wcag-eaa-ada-auditor/run-sync-get-dataset-items
   ```
 - **Headers**:
   - `Authorization`: `Bearer <YOUR_APIFY_API_TOKEN>`
@@ -275,7 +275,7 @@ Import [`integrations/n8n-eaa-lead-enrichment-workflow.json`](./integrations/n8n
 
 ### 3. Make.com (Integromat)
 1. Add the official **Apify -> Run an Actor** module in Make.
-2. Select `<YOUR_USERNAME>/wcag-eaa-ada-auditor` and enable **Run synchronously** (for batches of 1–25 URLs) or pair with **Watch Actor Runs -> Get Dataset Items** (for batches of 100–5,000 URLs).
+2. Select `<healthy_addax>/wcag-eaa-ada-auditor` and enable **Run synchronously** (for batches of 1–25 URLs) or pair with **Watch Actor Runs -> Get Dataset Items** (for batches of 100–5,000 URLs).
 3. Route items where `legalRiskScore >= 60` directly to Google Sheets, Airtable, Pipedrive, or Lemlist.
 
 ### 4. Model Context Protocol (MCP) Server for Claude, Cursor & Windsurf
@@ -283,7 +283,7 @@ Give your AI coding assistant real browser WCAG 2.2 vision so it can audit live 
 
 - **Apify Hosted MCP Endpoint**:
   ```text
-  https://mcp.apify.com/?tools=<YOUR_USERNAME>/wcag-eaa-ada-auditor
+  https://mcp.apify.com/?tools=<healthy_addax>/wcag-eaa-ada-auditor
   ```
 - **Actor Standby `/mcp` Tool Name**: `audit_website_accessibility`
 
@@ -292,7 +292,7 @@ Give your AI coding assistant real browser WCAG 2.2 vision so it can audit live 
 {
   "mcpServers": {
     "wcag-eaa-ada-auditor": {
-      "url": "https://mcp.apify.com/?tools=<YOUR_USERNAME>/wcag-eaa-ada-auditor",
+      "url": "https://mcp.apify.com/?tools=<healthy_addax>/wcag-eaa-ada-auditor",
       "headers": {
         "Authorization": "Bearer <YOUR_APIFY_API_TOKEN>"
       }
@@ -307,7 +307,7 @@ Give your AI coding assistant real browser WCAG 2.2 vision so it can audit live 
 ### 5. Direct cURL / REST API Call
 
 ```bash
-curl -X POST "https://api.apify.com/v2/acts/<YOUR_USERNAME>~wcag-eaa-ada-auditor/run-sync-get-dataset-items" \
+curl -X POST "https://api.apify.com/v2/acts/<healthy_addax>~wcag-eaa-ada-auditor/run-sync-get-dataset-items" \
   -H "Authorization: Bearer $APIFY_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
