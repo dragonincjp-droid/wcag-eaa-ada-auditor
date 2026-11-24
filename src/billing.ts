@@ -110,16 +110,35 @@ export class BillingManager {
 
     const sdkRes = await this.runtime.sdkCharge(eventName, count);
     if (sdkRes) {
-      const actualCharged = typeof sdkRes.chargedCount === 'number' ? sdkRes.chargedCount : count;
-      this.counts[eventName] += actualCharged;
-      this.totalUsd += unitPrice * actualCharged;
-      if (sdkRes.eventChargeLimitReached || actualCharged < count) {
+      if (sdkRes.eventChargeLimitReached === true) {
+        const partialCharged =
+          typeof sdkRes.chargedCount === 'number' && sdkRes.chargedCount > 0
+            ? sdkRes.chargedCount
+            : 0;
+        this.counts[eventName] += partialCharged;
+        this.totalUsd += unitPrice * partialCharged;
         this.limitReached = true;
+        return {
+          charged: partialCharged > 0,
+          chargedCount: partialCharged,
+          limitReached: true,
+          estimatedTotalUsd: Number(this.totalUsd.toFixed(6)),
+        };
       }
+
+      // When PPE monetization is not yet enabled (Private test run) or when the Actor creator
+      // runs their own Actor for $0, Apify returns { eventChargeLimitReached: false, chargedCount: 0 }.
+      // Allow the audit to proceed normally while recording actual billed count.
+      const actualCharged =
+        typeof sdkRes.chargedCount === 'number' ? sdkRes.chargedCount : count;
+      const effectiveUnits = actualCharged > 0 ? actualCharged : count;
+      this.counts[eventName] += effectiveUnits;
+      this.totalUsd += unitPrice * actualCharged;
+
       return {
-        charged: actualCharged > 0,
+        charged: true,
         chargedCount: actualCharged,
-        limitReached: this.limitReached,
+        limitReached: false,
         estimatedTotalUsd: Number(this.totalUsd.toFixed(6)),
       };
     }
