@@ -1,0 +1,19 @@
+{
+  "actorSpecification": 1,
+  "name": "wcag-eaa-ada-auditor",
+  "title": "WCAG 2.2, EAA & ADA Accessibility Auditor (Overlay + MCP)",
+  "description": "Bulk-audit websites for WCAG 2.2 Level A/AA violations, European Accessibility Act (EAA) statement gaps, and third-party overlay widgets (accessiBe, UserWay, AudioEye) with red-box visual proof PNGs, HTML fix diffs, and B2B cold outreach hooks.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "minMemoryMbytes": 1024,
+  "maxMemoryMbytes": 4096,
+  "usesStandbyMode": true,
+  "webServerMcpPath": "/mcp",
+  "dockerfile": "../Dockerfile",
+  "readme": "../README.md",
+  "input": "./input_schema.json",
+  "output": "./output_schema.json",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  }
+}

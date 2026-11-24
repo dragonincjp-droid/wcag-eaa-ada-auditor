@@ -1,0 +1,76 @@
+name: Weekly 3-Minute Owner Digest & Kill-Gate Monitor
+
+on:
+  schedule:
+    # 毎週月曜 09:00 JST (00:00 UTC) に自動実行（GitHub Actions 無料枠 = 維持費 ¥0）
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-Runモード（トークン不要・モックデータでレポート出力テスト）'
+        required: false
+        default: false
+        type: boolean
+      scenario:
+        description: 'Dry-Run時の検証シナリオ'
+        required: false
+        default: 'healthy'
+        type: choice
+        options:
+          - healthy
+          - gate1
+          - gate2
+          - anomaly
+      run_live_smoke_test:
+        description: '併せて本番スモークテスト（上限$0.10ガード付）も実行する'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  owner-weekly-digest:
+    name: Generate 3-Min Owner Report (JST Mon 09:00)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 (Zero extra npm packages needed)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Generate Weekly Digest & Evaluate Kill Gates
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_ACTOR_ID: ${{ secrets.APIFY_ACTOR_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          LAUNCH_DATE: ${{ vars.LAUNCH_DATE }}
+          USD_JPY_RATE: ${{ vars.USD_JPY_RATE }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUT_SCENARIO: ${{ inputs.scenario }}
+        run: |
+          ARGS=()
+          if [ "${INPUT_DRY_RUN}" = "true" ]; then
+            ARGS+=("--dry-run")
+            if [ -n "${INPUT_SCENARIO}" ]; then
+              ARGS+=("--scenario=${INPUT_SCENARIO}")
+            fi
+          fi
+          node scripts/weekly_digest.mjs "${ARGS[@]}"
+
+      - name: Optional Live Health Smoke Test ($0.10 Cap)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_smoke_test == true }}
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_ACTOR_ID: ${{ secrets.APIFY_ACTOR_ID }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/smoke_test_live.mjs --dry-run
+          else
+            node scripts/smoke_test_live.mjs
+          fi

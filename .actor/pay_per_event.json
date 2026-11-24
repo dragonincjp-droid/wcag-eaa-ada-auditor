@@ -1,0 +1,17 @@
+{
+  "actor-start": {
+    "eventTitle": "Actor start",
+    "eventDescription": "One-time initialization charge when the WCAG 2.2 / EAA & ADA Auditor run starts.",
+    "eventPriceUsd": 0.01
+  },
+  "url-audited": {
+    "eventTitle": "URL accessibility & legal risk audit",
+    "eventDescription": "Per-URL WCAG 2.2 Level A/AA inspection, overlay widget check, EAA statement detection, HTML code diff snippets, and B2B cold outreach pitch hook.",
+    "eventPriceUsd": 0.025
+  },
+  "visual-evidence-generated": {
+    "eventTitle": "Annotated red-box visual evidence screenshot",
+    "eventDescription": "Optional per-URL charge when includeVisualEvidence is enabled and an annotated red-bordered PNG screenshot is saved to Key-Value Store.",
+    "eventPriceUsd": 0.015
+  }
+}

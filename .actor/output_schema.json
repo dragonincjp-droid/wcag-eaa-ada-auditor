@@ -1,0 +1,19 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "WCAG 2.2 / EAA & ADA Accessibility Audit Output",
+  "description": "Structured accessibility legal-risk audit results stored in the default Dataset and annotated PNG screenshots in the Key-Value Store.",
+  "properties": {
+    "auditResults": {
+      "type": "string",
+      "title": "Audit Dataset Results",
+      "description": "Per-URL WCAG 2.2 A/AA findings, legalRiskScore, overlay vendor detections, EAA statement checks, HTML diffs, and salesPitchHook.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    },
+    "visualEvidenceStore": {
+      "type": "string",
+      "title": "Visual Evidence Key-Value Store",
+      "description": "Key-Value Store containing red-box annotated screenshot PNGs referenced by visualEvidenceKey.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}"
+    }
+  }
+}

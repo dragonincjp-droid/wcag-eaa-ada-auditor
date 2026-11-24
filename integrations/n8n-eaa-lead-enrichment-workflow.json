@@ -1,0 +1,263 @@
+{
+  "name": "EAA & ADA Accessibility Risk Lead Enrichment via Apify (WCAG 2.2 + Overlay Detector)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WCAG 2.2 / EAA & ADA Lead Enrichment Setup\n\n1. Set environment variable **`APIFY_API_TOKEN`** in n8n (Settings -> Variables or Docker env).\n2. Set **`APIFY_ACTOR_ID`** (e.g. `your-username~wcag-eaa-ada-auditor` — note the `~` tilde separator required by Apify REST API v2).\n3. Replace the sample URLs in **Set Prospect URLs** with your Google Sheets, HubSpot, Apollo, or Clay webhook source.\n4. Cost: **$0.01/run + $0.025/URL** (+$0.015/URL if `includeVisualEvidence: true`).",
+        "height": 230,
+        "width": 520,
+        "color": 4
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000001",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e1a0b101-1111-4111-8111-000000000002",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000003",
+      "name": "Weekly Monday 8AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1111111-2222-4333-8444-555555555501",
+              "name": "urls",
+              "value": "={{ [\"https://example.com\", \"https://www.w3.org/WAI/demos/bad/before/home.html\"] }}",
+              "type": "array"
+            },
+            {
+              "id": "a1111111-2222-4333-8444-555555555502",
+              "name": "wcagLevel",
+              "value": "AA",
+              "type": "string"
+            },
+            {
+              "id": "a1111111-2222-4333-8444-555555555503",
+              "name": "includeVisualEvidence",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000004",
+      "name": "Set Prospect URLs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/{{ $env.APIFY_ACTOR_ID || 'YOUR_USERNAME~wcag-eaa-ada-auditor' }}/run-sync-get-dataset-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.APIFY_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": {{ JSON.stringify($json.urls) }},\n  \"wcagLevel\": \"{{ $json.wcagLevel || 'AA' }}\",\n  \"includeVisualEvidence\": {{ $json.includeVisualEvidence ?? true }},\n  \"detectOverlays\": true,\n  \"checkAccessibilityStatement\": true,\n  \"respectRobotsTxt\": true,\n  \"maxConcurrency\": 3,\n  \"maxUrls\": 100\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000005",
+      "name": "Apify: Run WCAG/EAA/ADA Auditor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1111111-2222-4333-8444-555555555501",
+              "leftValue": "={{ $json.legalRiskScore }}",
+              "rightValue": 60,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "c1111111-2222-4333-8444-555555555502",
+              "leftValue": "={{ $json.riskTier }}",
+              "rightValue": "CRITICAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c1111111-2222-4333-8444-555555555503",
+              "leftValue": "={{ $json.riskTier }}",
+              "rightValue": "HIGH",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c1111111-2222-4333-8444-555555555504",
+              "leftValue": "={{ Boolean($json.overlayDetection && $json.overlayDetection.overlayDetected) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000006",
+      "name": "Filter High Risk or Overlay Detected",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        980,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (const item of $input.all()) {\n  const d = item.json;\n  const overlayVendors = d.overlayDetection?.overlayVendors || [];\n  const hasOverlay = Boolean(d.overlayDetection?.overlayDetected);\n  const missingStatement = d.eaaCompliance?.accessibilityStatementFound === false;\n  const topIssue = Array.isArray(d.topViolations) && d.topViolations.length > 0 ? d.topViolations[0] : null;\n\n  let campaignAngle = 'ADA_WCAG_REMEDIATION';\n  let subjectLine = `Quick WCAG 2.2 accessibility note on ${new URL(d.finalUrl || d.url).hostname}`;\n\n  if (hasOverlay) {\n    campaignAngle = 'OVERLAY_REPLACEMENT';\n    subjectLine = `${overlayVendors[0] || 'Accessibility'} widget on ${new URL(d.finalUrl || d.url).hostname} (+ ${d.summary?.totalViolations || 'several'} open DOM issues)`;\n  } else if (missingStatement) {\n    campaignAngle = 'EAA_MISSING_STATEMENT';\n    subjectLine = `EAA accessibility statement + WCAG 2.2 check on ${new URL(d.finalUrl || d.url).hostname}`;\n  }\n\n  const emailDraft = [\n    `Hi team,`,\n    ``,\n    d.salesPitchHook || `Ran a quick automated WCAG 2.2 AA check on ${d.url} and spotted ${d.summary?.totalViolations || 0} technical accessibility issues (Risk Score: ${d.legalRiskScore}/100).`,\n    topIssue\n      ? `For example, rule \"${topIssue.ruleId}\" (${topIssue.impact}) affects ${topIssue.affectedNodesCount} element(s) on your page and can be fixed directly in HTML/ARIA:`\n      : ``,\n    topIssue?.suggestedFixHtml ? `Suggested fix snippet:\\n${topIssue.suggestedFixHtml}` : ``,\n    d.visualEvidenceUrl ? `Annotated screenshot showing the exact elements: ${d.visualEvidenceUrl}` : ``,\n    ``,\n    `Would it be helpful if I sent over the full technical remediation checklist so your dev team can patch these in under an hour?`,\n    ``,\n    `Best,`,\n    `[Your Name]`,\n    `---`,\n    `Note: ${d.disclaimer || 'Automated technical WCAG 2.2 check for informational purposes only; not legal advice.'}`\n  ].filter(Boolean).join('\\n');\n\n  results.push({\n    json: {\n      prospectUrl: d.url,\n      finalUrl: d.finalUrl,\n      auditedAt: d.auditedAt,\n      legalRiskScore: d.legalRiskScore,\n      riskTier: d.riskTier,\n      campaignAngle,\n      subjectLine,\n      salesPitchHook: d.salesPitchHook,\n      overlayDetected: hasOverlay,\n      overlayVendors: overlayVendors.join(', '),\n      accessibilityStatementFound: d.eaaCompliance?.accessibilityStatementFound ?? null,\n      totalViolations: d.summary?.totalViolations ?? 0,\n      criticalViolations: d.summary?.criticalCount ?? 0,\n      seriousViolations: d.summary?.seriousCount ?? 0,\n      topViolationRuleId: topIssue?.ruleId ?? null,\n      beforeHtml: topIssue?.beforeHtml ?? null,\n      suggestedFixHtml: topIssue?.suggestedFixHtml ?? null,\n      visualEvidenceUrl: d.visualEvidenceUrl ?? null,\n      coldOutreachEmailBody: emailDraft,\n      disclaimer: d.disclaimer\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "e1a0b101-1111-4111-8111-000000000007",
+      "name": "Format Cold Outreach Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Prospect URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Monday 8AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Prospect URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prospect URLs": {
+      "main": [
+        [
+          {
+            "node": "Apify: Run WCAG/EAA/ADA Auditor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify: Run WCAG/EAA/ADA Auditor": {
+      "main": [
+        [
+          {
+            "node": "Filter High Risk or Overlay Detected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High Risk or Overlay Detected": {
+      "main": [
+        [
+          {
+            "node": "Format Cold Outreach Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

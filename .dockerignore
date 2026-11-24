@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+dist
+storage
+apify_storage
+coverage
+tests
+marketing
+integrations
+*.md
+!README.md
+.env
+.env.*
+*.log

@@ -1,0 +1,114 @@
+{
+  "title": "WCAG 2.2 / EAA & ADA Accessibility Legal Risk Auditor Input",
+  "description": "Provide one or more public website URLs to audit for WCAG 2.2 Level A/AA compliance, third-party accessibility overlay widgets (accessiBe, UserWay, AudioEye, etc.), EAA Accessibility Statement links, annotated visual screenshot evidence, and HTML remediation code snippets.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "urls": {
+      "title": "Target Website URLs",
+      "type": "array",
+      "description": "List of public HTTP/HTTPS URLs to audit (supports URL strings like [\"https://example.com\"] or RequestList objects like [{\"url\": \"https://example.com\"}]).",
+      "editor": "stringList",
+      "prefill": [
+        "https://example.com"
+      ]
+    },
+    "url": {
+      "title": "Single Website URL (Optional Shorthand)",
+      "type": "string",
+      "description": "Optional single URL convenience field for REST webhooks, Clay HTTP columns, or MCP calls.",
+      "editor": "textfield"
+    },
+    "wcagLevel": {
+      "title": "Target WCAG 2.2 Conformance Level",
+      "type": "string",
+      "description": "Target W3C conformance level. Level AA is the global regulatory benchmark for EU EAA (EN 301 549) and US DOJ ADA Title II/III.",
+      "enum": [
+        "AA",
+        "A"
+      ],
+      "default": "AA",
+      "editor": "select"
+    },
+    "includeVisualEvidence": {
+      "title": "Generate Annotated Red-Box Screenshot Evidence",
+      "type": "boolean",
+      "description": "Injects red bounding boxes and numbered badges onto violating DOM elements, captures a PNG screenshot, and saves it to the Apify Key-Value Store (+$0.015/URL).",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "fullPageScreenshot": {
+      "title": "Full-Page Screenshot",
+      "type": "boolean",
+      "description": "Capture the full scrollable page height instead of the above-the-fold desktop viewport (1440x900).",
+      "default": false,
+      "editor": "checkbox"
+    },
+    "detectOverlays": {
+      "title": "Detect Accessibility Overlay Widgets",
+      "type": "boolean",
+      "description": "Detects third-party overlay scripts and DOM signatures (accessiBe, UserWay, AudioEye, EqualWeb, Recite Me, Monsido, MaxAccess, User1st, Facil'iti).",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "checkAccessibilityStatement": {
+      "title": "Check EAA Multilingual Accessibility Statement",
+      "type": "boolean",
+      "description": "Scans navigation and footer links across EN/DE/FR/ES/IT/NL for mandatory European Accessibility Act (EAA) statement disclosures.",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "respectRobotsTxt": {
+      "title": "Respect robots.txt",
+      "type": "boolean",
+      "description": "Checks domain /robots.txt rules before scanning and skips disallowed paths.",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "maxUrls": {
+      "title": "Max URLs Safety Cap",
+      "type": "integer",
+      "description": "Hard ceiling on the total number of URLs audited in a single run to prevent accidental budget overruns.",
+      "default": 100,
+      "minimum": 1,
+      "maximum": 5000,
+      "editor": "number"
+    },
+    "maxConcurrency": {
+      "title": "Max Parallel Browser Pages",
+      "type": "integer",
+      "description": "Maximum concurrent headless Chromium tabs (1-10).",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "editor": "number"
+    },
+    "domainDelayMs": {
+      "title": "Per-Domain Polite Delay (ms)",
+      "type": "integer",
+      "description": "Minimum delay in milliseconds between consecutive requests to the same hostname.",
+      "default": 1000,
+      "minimum": 0,
+      "maximum": 30000,
+      "editor": "number"
+    },
+    "navigationTimeoutSecs": {
+      "title": "Page Navigation Timeout (seconds)",
+      "type": "integer",
+      "description": "Maximum time in seconds to wait for each page load and DOM stabilization.",
+      "default": 30,
+      "minimum": 5,
+      "maximum": 120,
+      "editor": "number"
+    },
+    "maxViolationsPerUrl": {
+      "title": "Max Detailed Remediation Snippets per URL",
+      "type": "integer",
+      "description": "Maximum number of prioritized violations with Before/After HTML diffs included per URL.",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 50,
+      "editor": "number"
+    }
+  }
+}

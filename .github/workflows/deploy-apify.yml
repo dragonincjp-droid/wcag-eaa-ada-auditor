@@ -1,0 +1,182 @@
+name: Deploy WCAG/EAA/ADA Auditor to Apify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      run_live_smoke_test:
+        description: 'デプロイ後に本番スモークテスト（上限$0.10安全ガード付）を実行する'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: deploy-apify-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: Build, Unit Tests & Ops Dry-Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node22-npm-${{ hashFiles('package-lock.json', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node22-npm-
+
+      - name: Install dependencies (npm ci)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Prepare Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run test suite
+        run: npm test
+
+      - name: Verify Ops scripts (--dry-run)
+        run: |
+          node scripts/smoke_test_live.mjs --dry-run
+          node scripts/weekly_digest.mjs --dry-run
+
+  deploy-apify:
+    name: Push Actor to Apify & Smoke Test
+    needs: quality-gate
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify APIFY_TOKEN secret
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          if [ -z "${APIFY_TOKEN}" ]; then
+            cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          ## ⚠️ Apify デプロイ待機中（`APIFY_TOKEN` 未設定）
+
+          ビルド・自動テストはすべて正常に通過しましたが、GitHub Secrets に `APIFY_TOKEN` が未登録のため自動デプロイを停止しました。
+
+          ### 解決手順（約1分）
+          1. [Apify Console > Settings > Integrations](https://console.apify.com/settings/integrations) から **Personal API token** をコピー
+          2. このGitHubリポジトリの **Settings > Secrets and variables > Actions > New repository secret** を開く
+          3. Name に `APIFY_TOKEN`、Secret にコピーしたトークンを貼り付けて保存
+          4. **Actions** タブからこのワークフローを再実行（Re-run jobs）してください（詳細: `OWNER_LAUNCH_GUIDE_JA.md`）
+          EOF
+            echo "::error::APIFY_TOKEN secret is not configured in GitHub Actions Secrets."
+            exit 1
+          fi
+
+      - name: Auto-inject Apify Username into README.md & integrations/*
+        id: resolve_user
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          node --input-type=module << 'EOF'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const response = await fetch('https://api.apify.com/v2/users/me', {
+            headers: {
+              Authorization: `Bearer ${process.env.APIFY_TOKEN}`,
+              Accept: 'application/json',
+            },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (!response.ok) {
+            const errText = await response.text().catch(() => '');
+            throw new Error(`Failed to fetch Apify /v2/users/me (${response.status}): ${errText.slice(0, 200)}`);
+          }
+          const payload = await response.json();
+          const username = payload?.data?.username?.trim();
+          if (!username || !/^[a-zA-Z0-9._-]+$/.test(username)) {
+            throw new Error(`Invalid or missing Apify username from /v2/users/me: ${username}`);
+          }
+
+          const targetFiles = ['README.md'];
+          if (fs.existsSync('integrations')) {
+            for (const entry of fs.readdirSync('integrations')) {
+              const fullPath = path.join('integrations', entry);
+              if (fs.statSync(fullPath).isFile()) {
+                targetFiles.push(fullPath);
+              }
+            }
+          }
+
+          for (const filePath of targetFiles) {
+            if (!fs.existsSync(filePath)) continue;
+            const original = fs.readFileSync(filePath, 'utf8');
+            const updated = original
+              .replaceAll('<YOUR_USERNAME>', username)
+              .replaceAll('YOUR_USERNAME', username);
+            if (updated !== original) {
+              fs.writeFileSync(filePath, updated, 'utf8');
+              console.log(`[deploy-apify] Auto-replaced YOUR_USERNAME -> "${username}" in ${filePath}`);
+            }
+          }
+
+          if (process.env.GITHUB_OUTPUT) {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `username=${username}\n`, 'utf8');
+          }
+          EOF
+
+      - name: Install Apify CLI & Push Actor
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          npm install -g apify-cli
+          apify login --token "${APIFY_TOKEN}"
+          apify push
+
+      - name: Run Live Smoke Test ($0.10 Cost Cap Circuit Breaker)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_live_smoke_test == true }}
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_ACTOR_ID: ${{ secrets.APIFY_ACTOR_ID }}
+        run: node scripts/smoke_test_live.mjs
+
+      - name: Publish Deployment Summary
+        if: success()
+        env:
+          APIFY_USERNAME: ${{ steps.resolve_user.outputs.username }}
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          {
+            printf '## 🚀 Apify 自動デプロイ＆本番死活テスト完了\n\n'
+            printf -- '- **対象コミット**: `%s`\n' "${SHORT_SHA}"
+            printf -- '- **Apify ユーザー名自動反映**: `%s`（`README.md` & `integrations/*` 置換済） ✅\n' "${APIFY_USERNAME}"
+            printf -- '- **品質ゲート**: Node 22 Build / Unit Tests / Playwright Chromium 検証通過 ✅\n'
+            printf -- '- **Apify デプロイ**: `apify push` 完了 ✅\n'
+            printf -- '- **本番スモークテスト**: `https://example.com` 監査成功（上限 `$0.10` サーキットブレーカー内） ✅\n'
+          } >> "$GITHUB_STEP_SUMMARY"

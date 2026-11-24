@@ -1,0 +1,44 @@
+{
+  "name": "wcag-eaa-ada-auditor",
+  "version": "1.0.0",
+  "description": "WCAG 2.2 Level A/AA, European Accessibility Act (EAA) Statement & Accessibility Overlay Legal Risk Auditor (Apify Actor + Standby MCP Server)",
+  "type": "module",
+  "main": "dist/main.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "node src/build.mjs",
+    "start": "node dist/main.js",
+    "start:prod": "node dist/main.js",
+    "start:standby": "node dist/main.js --standby",
+    "test": "ALLOW_LOCALHOST_FOR_TESTS=1 node --test tests/auditor.e2e.test.mjs",
+    "typecheck": "node src/build.mjs --check",
+    "lint": "node src/build.mjs --check"
+  },
+  "keywords": [
+    "apify",
+    "actor",
+    "mcp",
+    "wcag",
+    "wcag-2-2",
+    "eaa",
+    "ada",
+    "accessibility",
+    "axe-core",
+    "playwright",
+    "lead-generation",
+    "overlay-detector"
+  ],
+  "author": "Autonomous Venture Studio",
+  "license": "MIT",
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "apify": "^3.3.2",
+    "playwright": "^1.50.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

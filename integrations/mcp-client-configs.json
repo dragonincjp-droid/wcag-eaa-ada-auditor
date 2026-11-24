@@ -1,0 +1,73 @@
+{
+  "_meta": {
+    "actorName": "wcag-eaa-ada-auditor",
+    "mcpToolName": "audit_website_accessibility",
+    "instructions": "Replace <YOUR_USERNAME> with the Apify Actor owner's username and <YOUR_APIFY_API_TOKEN> with your personal Apify API token from https://console.apify.com/settings/integrations."
+  },
+  "cursor": {
+    "configFilePath": ".cursor/mcp.json",
+    "mcpServers": {
+      "wcag-eaa-ada-auditor": {
+        "url": "https://mcp.apify.com/?tools=<YOUR_USERNAME>/wcag-eaa-ada-auditor",
+        "headers": {
+          "Authorization": "Bearer <YOUR_APIFY_API_TOKEN>"
+        }
+      }
+    }
+  },
+  "claudeDesktop": {
+    "configFilePaths": {
+      "macOS": "~/Library/Application Support/Claude/claude_desktop_config.json",
+      "windows": "%APPDATA%\\Claude\\claude_desktop_config.json"
+    },
+    "mcpServers": {
+      "wcag-eaa-ada-auditor": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@apify/actors-mcp-server",
+          "--actors",
+          "<YOUR_USERNAME>/wcag-eaa-ada-auditor"
+        ],
+        "env": {
+          "APIFY_TOKEN": "<YOUR_APIFY_API_TOKEN>"
+        }
+      }
+    }
+  },
+  "windsurf": {
+    "configFilePath": "~/.codeium/windsurf/mcp_config.json",
+    "mcpServers": {
+      "wcag-eaa-ada-auditor": {
+        "serverUrl": "https://mcp.apify.com/sse?tools=<YOUR_USERNAME>/wcag-eaa-ada-auditor",
+        "headers": {
+          "Authorization": "Bearer <YOUR_APIFY_API_TOKEN>"
+        }
+      }
+    }
+  },
+  "actorStandbyDirectEndpoint": {
+    "description": "Direct connection to the Actor Standby /mcp Streamable HTTP endpoint exposing the `audit_website_accessibility` tool with sub-second warm startup.",
+    "mcpServers": {
+      "wcag-eaa-ada-auditor-standby": {
+        "url": "https://<YOUR_ACTOR_STANDBY_HOST>.apify.actor/mcp",
+        "headers": {
+          "Authorization": "Bearer <YOUR_APIFY_API_TOKEN>"
+        }
+      }
+    }
+  },
+  "claudeCodeCli": {
+    "command": "claude mcp add --transport http wcag-eaa-ada-auditor \"https://mcp.apify.com/?tools=<YOUR_USERNAME>/wcag-eaa-ada-auditor\" --header \"Authorization: Bearer <YOUR_APIFY_API_TOKEN>\""
+  },
+  "sampleAgentPrompts": [
+    {
+      "useCase": "Developer Pre-Release WCAG 2.2 & EAA Gate",
+      "prompt": "Call audit_website_accessibility on https://staging.example.eu with wcagLevel='AA', includeVisualEvidence=true, detectOverlays=true, and checkAccessibilityStatement=true. Then locate the matching components in my local repository and apply the ARIA/HTML fixes."
+    },
+    {
+      "useCase": "Agency Instant Prospect Teardown",
+      "prompt": "Audit https://prospect-store.com using the WCAG EAA ADA Auditor MCP tool. Summarize their legalRiskScore, check whether they rely on an overlay like accessiBe or UserWay, give me the annotated visualEvidenceUrl, and draft a concise technical remediation proposal."
+    }
+  ]
+}

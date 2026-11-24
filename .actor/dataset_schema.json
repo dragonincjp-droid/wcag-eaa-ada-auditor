@@ -1,0 +1,189 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "type": "object",
+    "required": [
+      "url",
+      "auditedAt",
+      "legalRiskScore"
+    ],
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Original input URL requested for auditing."
+      },
+      "finalUrl": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Resolved URL after HTTP redirects."
+      },
+      "domain": {
+        "type": "string",
+        "description": "Target hostname."
+      },
+      "auditedAt": {
+        "type": "string",
+        "description": "ISO 8601 UTC audit timestamp."
+      },
+      "status": {
+        "type": "string",
+        "description": "Audit execution status (audited, blocked_ssrf, blocked_robots, error)."
+      },
+      "httpStatus": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "HTTP response status code."
+      },
+      "pageTitle": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "HTML document <title> of the audited page."
+      },
+      "loadTimeMs": {
+        "type": "number",
+        "description": "Total page audit duration in milliseconds."
+      },
+      "errorMessage": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Diagnostic error or security block reason when status is not audited."
+      },
+      "legalRiskScore": {
+        "type": "number",
+        "description": "Deterministic 0-100 legal & technical accessibility risk score."
+      },
+      "riskTier": {
+        "type": "string",
+        "description": "Risk tier classification: CRITICAL, HIGH, MEDIUM, or LOW."
+      },
+      "overlayDetected": {
+        "type": "boolean",
+        "description": "Whether a third-party accessibility overlay widget was detected on the page."
+      },
+      "overlayVendors": {
+        "type": "array",
+        "description": "Detected overlay widget vendors (e.g. accessiBe, UserWay, AudioEye, EqualWeb)."
+      },
+      "overlayDetection": {
+        "type": "object",
+        "description": "Detailed overlay detection breakdown and FTC/EAA regulatory note."
+      },
+      "accessibilityStatementFound": {
+        "type": "boolean",
+        "description": "Whether a multilingual EAA Accessibility Statement link was found."
+      },
+      "accessibilityStatementUrl": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Resolved URL of the detected Accessibility Statement page."
+      },
+      "eaaCompliance": {
+        "type": "object",
+        "description": "European Accessibility Act (EAA) statement disclosure check details."
+      },
+      "summary": {
+        "type": "object",
+        "description": "Aggregated counts of WCAG 2.2 violations by impact severity."
+      },
+      "salesPitchHook": {
+        "type": "string",
+        "description": "Ready-to-send 1-2 sentence English cold outreach hook for Clay, n8n, or Smartlead."
+      },
+      "visualEvidenceKey": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Apify Key-Value Store record key for the annotated PNG screenshot."
+      },
+      "visualEvidenceUrl": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Public URL to the annotated red-box visual evidence PNG."
+      },
+      "visualEvidence": {
+        "type": "object",
+        "description": "Metadata for the generated annotated visual evidence PNG (generated, key, url, highlightedCount, byteLength)."
+      },
+      "topViolations": {
+        "type": "array",
+        "description": "Prioritized WCAG 2.2 violations with Before/After HTML remediation snippets and unified diffs."
+      },
+      "disclaimer": {
+        "type": "string",
+        "description": "Mandatory technical inspection & non-legal-advice disclaimer."
+      }
+    }
+  },
+  "views": {
+    "overview": {
+      "title": "Legal Risk & Lead Enrichment Overview",
+      "transformation": {
+        "fields": [
+          "url",
+          "legalRiskScore",
+          "riskTier",
+          "overlayDetected",
+          "overlayVendors",
+          "accessibilityStatementFound",
+          "salesPitchHook",
+          "visualEvidenceUrl",
+          "status"
+        ]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "url": {
+            "label": "Website URL",
+            "format": "link"
+          },
+          "legalRiskScore": {
+            "label": "Risk Score (0-100)",
+            "format": "number"
+          },
+          "riskTier": {
+            "label": "Risk Tier",
+            "format": "text"
+          },
+          "overlayDetected": {
+            "label": "Overlay Used",
+            "format": "boolean"
+          },
+          "overlayVendors": {
+            "label": "Overlay Vendors",
+            "format": "array"
+          },
+          "accessibilityStatementFound": {
+            "label": "EAA Statement",
+            "format": "boolean"
+          },
+          "salesPitchHook": {
+            "label": "Cold Outreach Hook",
+            "format": "text"
+          },
+          "visualEvidenceUrl": {
+            "label": "Red-Box PNG",
+            "format": "link"
+          },
+          "status": {
+            "label": "Status",
+            "format": "text"
+          }
+        }
+      }
+    }
+  }
+}
